@@ -23,7 +23,7 @@ namespace :db do
     task :sync => 'capistrano_db_tasks:check_can_push' do
       on roles(:db) do
         if fetch(:skip_data_sync_confirm) || Util.prompt('Are you sure you want to REPLACE THE REMOTE DATABASE with local database')
-          Database.local_to_remote(self, fetch(:db_remote_truncate_db))
+          Database.local_to_remote(self)
         end
       end
     end

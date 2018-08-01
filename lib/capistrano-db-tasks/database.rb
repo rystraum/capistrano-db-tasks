@@ -1,9 +1,9 @@
 module Database
   class Base
     attr_accessor :config, :output_file
-    def initialize(cap_instance, truncate_only = false)
+    def initialize(cap_instance)
       @cap = cap_instance
-      @truncate = truncate_only
+      @truncate = @cap.fetch(:db_remote_truncate_db)
     end
 
     def mysql?
