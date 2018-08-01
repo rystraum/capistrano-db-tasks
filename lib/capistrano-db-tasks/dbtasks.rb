@@ -9,6 +9,7 @@ set :assets_dir, 'system' unless fetch(:assets_dir)
 set :local_assets_dir, 'public' unless fetch(:local_assets_dir)
 set :skip_data_sync_confirm, (ENV['SKIP_DATA_SYNC_CONFIRM'].to_s.downcase == 'true')
 set :disallow_pushing, false unless fetch(:disallow_pushing)
+set :db_remote_truncate_db, false unless fetch(:db_remote_truncate_db)
 
 namespace :capistrano_db_tasks do
   task :check_can_push do
@@ -22,7 +23,7 @@ namespace :db do
     task :sync => 'capistrano_db_tasks:check_can_push' do
       on roles(:db) do
         if fetch(:skip_data_sync_confirm) || Util.prompt('Are you sure you want to REPLACE THE REMOTE DATABASE with local database')
-          Database.local_to_remote(self)
+          Database.local_to_remote(self, fetch(:db_remote_truncate_db))
         end
       end
     end

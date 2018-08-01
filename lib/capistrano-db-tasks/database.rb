@@ -1,8 +1,9 @@
 module Database
   class Base
     attr_accessor :config, :output_file
-    def initialize(cap_instance)
+    def initialize(cap_instance, truncate_only = false)
       @cap = cap_instance
+      @truncate = truncate_only
     end
 
     def mysql?
@@ -62,9 +63,32 @@ module Database
       if mysql?
         "mysql #{credentials} -D #{database} < #{file}"
       elsif postgresql?
-        terminate_connection_sql = "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '#{database}' AND pid <> pg_backend_pid();"
-        "#{pgpass} psql -c \"#{terminate_connection_sql};\" #{credentials}; #{pgpass} dropdb #{credentials} #{database}; #{pgpass} createdb #{credentials} #{database}; #{pgpass} psql #{credentials} -d #{database} < #{file}"
+        "#{pg_terminate}; #{pg_truncate}; #{pg_psql}"
       end
+    end
+
+    def pg_truncate
+      if @truncate
+        "#{pgpass} psql -c \"select tablename from pg_tables where schemaname='public';\" -t -d #{database} --pset=\"footer=off\" | head -n -1 | awk '{print \"drop table if exists public.\"$1\" cascade;\"}' | xargs -0 #{credentials} psql -d #{database} -c"
+      else
+        "#{pg_dropdb}; #{pg_createdb}"
+      end
+    end
+
+    def pg_terminate
+      "#{pgpass} psql -c \"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '#{database}' AND pid <> pg_backend_pid();\" #{credentials}"
+    end
+
+    def pg_dropdb
+      "#{pgpass} dropdb #{credentials} #{database}"
+    end
+
+    def pg_createdb
+      "#{pgpass} createdb #{credentials} #{database}"
+    end
+
+    def pg_psql
+      "#{pgpass} psql #{credentials} -d #{database} < #{file}"
     end
 
   end
