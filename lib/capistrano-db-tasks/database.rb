@@ -63,7 +63,7 @@ module Database
       if mysql?
         "mysql #{credentials} -D #{database} < #{file}"
       elsif postgresql?
-        "#{pg_terminate}; #{pg_truncate}; #{pg_psql}"
+        "#{pg_terminate}; #{pg_truncate}; #{pg_psql(file)}"
       end
     end
 
@@ -87,7 +87,7 @@ module Database
       "#{pgpass} createdb #{credentials} #{database}"
     end
 
-    def pg_psql
+    def pg_psql(file)
       "#{pgpass} psql #{credentials} -d #{database} < #{file}"
     end
 
