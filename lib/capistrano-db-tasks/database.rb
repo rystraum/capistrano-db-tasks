@@ -1,6 +1,8 @@
 module Database
   class Base
     attr_accessor :config, :output_file
+    attr_reader :truncate
+
     def initialize(cap_instance)
       @cap = cap_instance
       @truncate = @cap.fetch(:db_remote_truncate_db)
@@ -68,8 +70,8 @@ module Database
     end
 
     def pg_truncate
-      if @truncate
-        "#{pgpass} psql -c \"select tablename from pg_tables where schemaname='public';\" -t -d #{database} --pset=\"footer=off\" | head -n -1 | awk '{print \"drop table if exists public.\"$1\" cascade;\"}' | xargs -0 #{credentials} psql -d #{database} -c"
+      if truncate
+        "#{pgpass} psql -c \"select tablename from pg_tables where schemaname='public';\" -t -d #{database} --pset=\"footer=off\" | head -n -1 | awk '{print \"drop table if exists public.\"$1\" cascade;\"}' | xargs -0 psql #{credentials} -d #{database} -c"
       else
         "#{pg_dropdb}; #{pg_createdb}"
       end
