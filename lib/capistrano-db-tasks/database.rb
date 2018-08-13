@@ -3,9 +3,9 @@ module Database
     attr_accessor :config, :output_file
     attr_reader :truncate
 
-    def initialize(cap_instance)
+    def initialize(cap_instance, truncate)
       @cap = cap_instance
-      @truncate = @cap.fetch(:db_remote_truncate_db)
+      @truncate = truncate
     end
 
     def mysql?
@@ -97,7 +97,8 @@ module Database
 
   class Remote < Base
     def initialize(cap_instance)
-      super(cap_instance)
+      truncate = cap_instance.fetch(:db_remote_truncate_db)
+      super(cap_instance, truncate)
       @config = @cap.capture("cat #{@cap.current_path}/config/database.yml")
       @config = YAML.load(ERB.new(@config).result)[@cap.fetch(:rails_env).to_s]
     end
@@ -136,7 +137,8 @@ module Database
 
   class Local < Base
     def initialize(cap_instance)
-      super(cap_instance)
+      truncate = cap_instance.fetch(:db_local_truncate_db)
+      super(cap_instance, truncate)
       @config = YAML.load(ERB.new(File.read(File.join('config', 'database.yml'))).result)[fetch(:local_rails_env).to_s]
       puts "local #{@config}"
     end
